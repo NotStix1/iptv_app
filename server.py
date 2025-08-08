@@ -117,8 +117,13 @@ class IPTVRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def _send_file(self, path, content_type=None):
+        """Send a local file ensuring path traversal protection."""
         try:
-            with open(path, 'rb') as f:
+            real = os.path.realpath(path)
+            if not (real.startswith(STATIC_DIR) or real.startswith(TEMPLATES_DIR)):
+                self.send_error(403, 'Forbidden')
+                return
+            with open(real, 'rb') as f:
                 data = f.read()
         except Exception:
             self.send_error(404, 'Not Found')
@@ -131,8 +136,12 @@ class IPTVRequestHandler(SimpleHTTPRequestHandler):
                 content_type = 'text/css'
             elif ext == '.js':
                 content_type = 'application/javascript'
-            elif ext in ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'):
-                content_type = 'image/' + ext[1:]
+            elif ext in ('.png', '.gif', '.webp'):
+                content_type = f'image/{ext[1:]}'
+            elif ext in ('.jpg', '.jpeg'):
+                content_type = 'image/jpeg'
+            elif ext == '.svg':
+                content_type = 'image/svg+xml'
             else:
                 content_type = 'application/octet-stream'
         self.send_response(200)
@@ -150,9 +159,12 @@ class IPTVRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def _err(self, status, message):
+        data = json.dumps({'error': message}).encode()
         self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', len(data))
         self.end_headers()
-        self.wfile.write(json.dumps({'error': message}).encode())
+        self.wfile.write(data)
 
     def parse_auth_token(self):
         auth = self.headers.get('Authorization', '')
