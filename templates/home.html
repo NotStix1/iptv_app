@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="aurora">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPTV – Home</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">View<span>It</span></div>
+      <nav class="nav">
+        <button class="item active" data-section="home">Home</button>
+        <button class="item" data-section="live">Live TV</button>
+        <button class="item" data-section="movies">Movies</button>
+        <button class="item" data-section="series">Series</button>
+        <div class="sep"></div>
+        <button class="item" id="settings-btn">Settings</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="banner card subtle">
+          <strong>Heads up:</strong> Enter your IPTV credentials to unlock content.
+        </div>
+        <div class="right">
+          <select id="profile-select" class="select"></select>
+          <button id="profiles-btn" class="button ghost">Profiles</button>
+          <button id="logout-btn" class="button danger ghost">Logout</button>
+        </div>
+      </header>
+
+      <!-- Home / IPTV credentials -->
+      <section id="home" class="page show">
+        <div id="iptv-credentials-form" class="card padded">
+          <h2>IPTV Login</h2>
+          <div class="grid grid-3">
+            <input id="server-url" class="input" placeholder="Server URL (http://example.com:80)" />
+            <input id="iptv-username" class="input" placeholder="Username" />
+            <input id="iptv-password" type="password" class="input" placeholder="Password" />
+          </div>
+          <div id="iptv-error" class="error"></div>
+          <button id="save-iptv-btn" class="button">Save</button>
+        </div>
+
+        <div id="home-rows" class="rows">
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </div>
+      </section>
+
+      <!-- Live -->
+      <section id="live" class="page">
+        <h2 class="section-title">Live TV</h2>
+        <div id="live-categories" class="chips"></div>
+        <div id="live-streams" class="cards-row"></div>
+      </section>
+
+      <!-- Movies -->
+      <section id="movies" class="page">
+        <h2 class="section-title">Movies</h2>
+        <div id="vod-categories" class="chips"></div>
+        <div id="vod-streams" class="cards-row"></div>
+      </section>
+
+      <!-- Series -->
+      <section id="series" class="page">
+        <h2 class="section-title">Series</h2>
+        <div id="series-categories" class="chips"></div>
+        <div id="series-streams" class="cards-row"></div>
+      </section>
+
+      <!-- Profiles -->
+      <section id="profiles-section" class="page">
+        <h2>Profiles</h2>
+        <div id="profiles-list" class="cards-row"></div>
+        <div class="inline-form">
+          <input type="text" id="new-profile-name" class="input" placeholder="Profile name" />
+          <button id="create-profile-btn" class="button">Create</button>
+        </div>
+      </section>
+
+      <!-- Global player -->
+      <div id="player-section" class="player card hidden">
+        <div class="player-top">
+          <div id="player-title" class="title"></div>
+          <button id="player-close" class="icon-btn" title="Close">✕</button>
+        </div>
+        <video id="video-player" controls playsinline></video>
+      </div>
+    </main>
+  </div>
+
+  <!-- About modal -->
+  <div id="about-overlay" class="overlay hidden">
+    <div class="about card">
+      <div class="about-media">
+        <img id="about-cover" alt="cover"/>
+      </div>
+      <div class="about-body">
+        <div class="about-header">
+          <h3 id="about-title"></h3>
+          <div class="about-meta"><span id="about-quality"></span><span id="about-year"></span></div>
+        </div>
+        <p id="about-overview" class="about-overview"></p>
+        <div id="about-actions" class="about-actions">
+          <button id="about-play" class="button">Play</button>
+          <button id="about-add" class="button ghost">Add to My List</button>
+        </div>
+        <div id="about-series" class="hidden">
+          <div id="season-chips" class="chips"></div>
+          <div id="episodes-grid" class="episodes"></div>
+        </div>
+        <button id="about-close" class="icon-btn close">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settings-overlay" class="overlay hidden">
+    <div class="settings card padded">
+      <h3>Settings</h3>
+      <div class="setting">
+        <label><input type="checkbox" id="compat-toggle"> Enable Compatibility Mode for VOD (fix silent audio)</label>
+      </div>
+      <div class="setting">
+        <label>Theme</label>
+        <select id="theme-select" class="select">
+          <option value="aurora" selected>Aurora Teal</option>
+          <option value="classic">Classic</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button id="settings-close" class="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/home.js"></script>
+</body>
+</html>
