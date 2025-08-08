@@ -26,10 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const liveCategoriesEl = document.getElementById('live-categories');
   const liveStreamsEl = document.getElementById('live-streams');
-  const vodCategoriesEl = document.getElementById('vod-categories');
-  const vodStreamsEl = document.getElementById('vod-streams');
   const seriesCategoriesEl = document.getElementById('series-categories');
   const seriesStreamsEl = document.getElementById('series-streams');
+
+  const moviesRowsEl = document.getElementById('movies-rows');
+  const moviesAllEl = document.getElementById('movies-all');
+  const moviesAllTitle = document.getElementById('movies-all-title');
+  const moviesAllStreams = document.getElementById('movies-all-streams');
+  const moviesBackBtn = document.getElementById('movies-back');
 
   const player = document.getElementById('player-section');
   const playerTitle = document.getElementById('player-title');
@@ -77,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = btn.dataset.section;
     switchPage(id);
     if (id === 'live') loadCategories('live');
-    if (id === 'movies') loadCategories('vod');
+    if (id === 'movies') loadMovies();
     if (id === 'series') loadCategories('series');
   }));
 
@@ -159,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCategories(type) {
     let container;
     if (type==='live') container = liveCategoriesEl;
-    if (type==='vod') container = vodCategoriesEl;
     if (type==='series') container = seriesCategoriesEl;
     if (!container) return;
     container.innerHTML = '';
@@ -179,8 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadStreams(type, categoryId) {
     let target;
     if (type==='live') target = liveStreamsEl;
-    if (type==='vod') target = vodStreamsEl;
     if (type==='series') target = seriesStreamsEl;
+    if (!target) return;
     target.innerHTML = '';
     const res = await authFetch('/streams/' + type + '/' + categoryId);
     const streams = await res.json();
@@ -199,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.seriesId = item.series_id;
       } else {
         card.dataset.streamId = item.stream_id;
-        if (type==='vod') card.dataset.ext = item.container_extension || 'mp4';
       }
       card.dataset.type = type;
       card.dataset.title = label.textContent;
@@ -211,6 +213,88 @@ document.addEventListener('DOMContentLoaded', () => {
       target.appendChild(card);
     });
   }
+
+  // Movies catalog
+  async function loadMovies() {
+    moviesRowsEl.style.display = '';
+    moviesAllEl.style.display = 'none';
+    moviesRowsEl.innerHTML = '';
+    try {
+      const res = await authFetch('/categories/vod');
+      const cats = await res.json();
+      if (!res.ok) { moviesRowsEl.textContent = cats.error || 'Failed to load categories'; return; }
+      for (const cat of cats) {
+        const wrap = document.createElement('div');
+        const h = document.createElement('h2');
+        h.className = 'section-title';
+        h.textContent = cat.category_name;
+        const row = document.createElement('div');
+        row.className = 'cards-row';
+        wrap.appendChild(h);
+        wrap.appendChild(row);
+        moviesRowsEl.appendChild(wrap);
+        try {
+          const resItems = await authFetch('/streams/vod/' + cat.category_id);
+          const items = await resItems.json();
+          if (resItems.ok) {
+            items.slice(0,10).forEach(item => row.appendChild(createVodCard(item)));
+            const seeCard = document.createElement('div');
+            seeCard.className = 'card-item';
+            const seeImg = document.createElement('img');
+            seeImg.src = 'https://via.placeholder.com/300x420?text=See+All';
+            const seeLabel = document.createElement('div');
+            seeLabel.className = 'label';
+            seeLabel.textContent = 'See All';
+            seeCard.appendChild(seeImg);
+            seeCard.appendChild(seeLabel);
+            seeCard.addEventListener('click', () => showAllMovies(cat));
+            row.appendChild(seeCard);
+          }
+        } catch {}
+      }
+    } catch {
+      moviesRowsEl.textContent = 'Failed to load categories';
+    }
+  }
+
+  function createVodCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card-item';
+    const img = document.createElement('img');
+    img.src = item.stream_icon || item.cover || 'https://via.placeholder.com/300x420?text=No+Image';
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = item.name || item.title || 'Untitled';
+    card.dataset.streamId = item.stream_id;
+    card.dataset.type = 'vod';
+    card.dataset.ext = item.container_extension || 'mp4';
+    card.dataset.title = label.textContent;
+    card.dataset.thumb = img.src;
+    card.appendChild(img);
+    card.appendChild(label);
+    card.addEventListener('click', () => openAbout(card));
+    return card;
+  }
+
+  async function showAllMovies(cat) {
+    moviesRowsEl.style.display = 'none';
+    moviesAllEl.style.display = 'block';
+    moviesAllTitle.textContent = cat.category_name;
+    moviesAllStreams.innerHTML = '';
+    try {
+      const res = await authFetch('/streams/vod/' + cat.category_id);
+      const streams = await res.json();
+      if (!res.ok) { moviesAllStreams.textContent = streams.error || 'Failed to load streams'; return; }
+      streams.forEach(item => moviesAllStreams.appendChild(createVodCard(item)));
+    } catch {
+      moviesAllStreams.textContent = 'Failed to load streams';
+    }
+  }
+
+  moviesBackBtn.addEventListener('click', () => {
+    moviesAllEl.style.display = 'none';
+    moviesRowsEl.style.display = '';
+  });
 
   // Build a simple home screen (fake "Trending"/"Recently added")
   async function buildHomeRows() {
